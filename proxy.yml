@@ -1,0 +1,61 @@
+version: '3.8'
+
+x-common-deploy: &common-deploy
+  mode: global
+  update_config:
+    delay: 0s
+    order: stop-first
+    failure_action: continue
+  restart_policy:
+    condition: on-failure
+    delay: 5s
+    max_attempts: 5
+    window: 120s
+
+x-deploy: &deploy
+  deploy:
+    <<: *common-deploy
+    placement:
+      constraints:
+        - node.labels.proxy==1
+
+services:
+  proxy:
+    <<: *deploy
+    image: ${DOCKER_REPOSITORY}/proxy:latest
+    hostname: "proxy"
+    init: true
+    networks:
+      - proxyipv4
+    volumes:
+      - proxy-logs:/var/log/squid
+    cap_add:
+      - ALL
+      - NET_ADMIN
+    cap_drop:
+      - SYS_ADMIN
+    ports:
+      - target: 8080
+        published: 8080
+        protocol: tcp
+        mode: ingress
+    environment:
+      SQUID_DAEMON_OPTS: ""
+      TC_HTB_RATE: ${TC_HTB_RATE}
+
+networks:
+  proxyipv4:
+    driver: overlay
+    attachable: true
+    driver_opts:
+      encrypted: "1"
+      gateway: 10.10.5.1
+    internal: true
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.10.5.0/28
+
+volumes:
+  proxy-logs:
+    name: "logs-$STACK_NAME"
