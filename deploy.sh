@@ -7,6 +7,8 @@ printf -v now "%(%s)T" -1
 export CFG_PREFIX=$STACK_NAME-$now
 export TC_HTB_RATE=${TC_HTB_RATE:-50Mbit}
 
+cd $WORKSPACE || exit $?
+
 echo "building multiarch images with buildx"
 buildx_name=${BUILDX_NAME:-builder}
 docker buildx use $buildx_name || \
