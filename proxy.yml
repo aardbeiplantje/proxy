@@ -26,7 +26,7 @@ services:
     hostname: "proxy"
     init: true
     networks:
-      - proxyipv4
+      - dmz
     volumes:
       - proxy-logs:/var/log/squid
     cap_add:
@@ -44,17 +44,18 @@ services:
       TC_HTB_RATE: ${TC_HTB_RATE}
 
 networks:
-  proxyipv4:
+  dmz:
+    name: dmz-${APP_NAME}
     driver: overlay
     attachable: true
     driver_opts:
       encrypted: "1"
-      gateway: 10.10.5.1
+      gateway: 10.99.5.1
     internal: true
     ipam:
       driver: default
       config:
-        - subnet: 10.10.5.0/28
+        - subnet: 10.99.5.0/28
 
 volumes:
   proxy-logs:
