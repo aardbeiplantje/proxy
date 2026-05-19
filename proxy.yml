@@ -24,12 +24,9 @@ services:
     <<: *deploy
     image: ${DOCKER_REPOSITORY}/proxy:latest
     hostname: "proxy"
-    sysctls:
-      - net.ipv6.conf.all.disable_ipv6=0
-      - net.ipv6.conf.all.forwarding=1
     init: true
     networks:
-      dmzipv6:
+      - dmz
     volumes:
       - proxy-logs:/var/log/squid
     cap_add:
@@ -47,9 +44,18 @@ services:
       TC_HTB_RATE: ${TC_HTB_RATE}
 
 networks:
-  dmzipv6:
+  dmz:
     name: dmz-${APP_NAME}
-    external: true
+    driver: overlay
+    attachable: true
+    driver_opts:
+      encrypted: "1"
+      gateway: 10.99.5.1
+    internal: true
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.99.5.0/28
 
 volumes:
   proxy-logs:
