@@ -55,7 +55,7 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 10.99.5.0/28
+        - subnet: 10.99.5.0/24
 
 volumes:
   proxy-logs:
