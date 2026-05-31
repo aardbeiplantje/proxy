@@ -1,15 +1,11 @@
 group "default" {
-  targets = [
-    "runtime",
-  ]
+  targets = ["local"]
 }
 group "local" {
   targets = ["_local"]
 }
 group "runtime" {
-    targets = [
-        "builds-proxy-amd64",
-    ]
+    targets = ["builds-proxy-amd64"]
 }
 variable "DOCKER_TAG" {
   default = "latest"

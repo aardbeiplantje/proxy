@@ -1,16 +1,11 @@
 #!/bin/bash 
 
 export WORKSPACE=${WORKSPACE:-${BASH_SOURCE%/*}}
-export APP_NAME=${APP_NAME:-proxy}
-export STACK_NAME=${STACK_NAME:-$APP_NAME}
-printf -v now "%(%s)T" -1
-export CFG_PREFIX=$STACK_NAME-$now
+export STACK_NAME=${STACK_NAME:-proxy}
 export TC_HTB_RATE=${TC_HTB_RATE:-50Mbit}
 export DOCKER_IMAGE=${DOCKER_IMAGE:-proxy:latest}
 
-cd $WORKSPACE || exit $?
-
-echo "using: $APP_NAME / $STACK_NAME, rate=${TC_HTB_RATE}"
+echo "using: $STACK_NAME, rate=${TC_HTB_RATE}"
 
 echo "building images with buildx bake"
 docker buildx bake -f docker-bake.hcl local || exit $?
