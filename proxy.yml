@@ -45,7 +45,7 @@ services:
 
 networks:
   dmz:
-    name: dmz-${APP_NAME}
+    name: dmz-${STACK_NAME}
     driver: overlay
     attachable: true
     driver_opts:
