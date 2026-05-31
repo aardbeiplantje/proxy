@@ -14,12 +14,11 @@ buildx_name=${BUILDX_NAME:-builder}
 docker buildx use $buildx_name || \
 docker buildx create \
     --use \
-    --network host \
     --name $buildx_name \
     --platform linux/amd64,linux/arm64,linux/aarch64 \
     --driver docker-container \
     --driver-opt image=moby/buildkit:master \
-    --driver-opt network=host
+    --driver-opt network=host || exit $?
 
 echo "checking for docker registry auth"
 if [   -z "$DOCKER_REGISTRY" \
