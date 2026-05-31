@@ -9,43 +9,36 @@ export TC_HTB_RATE=${TC_HTB_RATE:-50Mbit}
 
 cd $WORKSPACE || exit $?
 
-echo "building multiarch images with buildx"
-buildx_name=${BUILDX_NAME:-builder}
-docker buildx use $buildx_name || \
-docker buildx create \
-    --use \
-    --name $buildx_name \
-    --platform linux/amd64,linux/arm64,linux/aarch64 \
-    --driver docker-container \
-    --driver-opt image=moby/buildkit:master \
-    --driver-opt network=host || exit $?
+echo "using: $APP_NAME / $STACK_NAME, rate=${TC_HTB_RATE}"
 
-echo "checking for docker registry auth"
-if [   -z "$DOCKER_REGISTRY" \
+if [ -z "$DOCKER_REGISTRY" \
     -o -z "$DOCKER_REGISTRY_USER" \
     -o -z "$DOCKER_REGISTRY_PASS" ]; then
-    echo "no docker registry login info, using local registry"
-    export DOCKER_REGISTRY=local
-    export DOCKER_REPOSITORY=${DOCKER_REPOSITORY:-${DOCKER_REGISTRY}/proxy}
-else
-    echo "using docker registry login info"
-    export DOCKER_REGISTRY
-    export DOCKER_REGISTRY_USER
-    export DOCKER_REGISTRY_PASS
-    printenv DOCKER_REGISTRY_PASS \
-        |docker login \
-            -u ${DOCKER_REGISTRY_USER?Need a DOCKER_REGISTRY_USER} \
-            --password-stdin \
-            ${DOCKER_REGISTRY?Need a DOCKER_REGISTRY}
-    export DOCKER_REPOSITORY=${DOCKER_REPOSITORY:-${DOCKER_REGISTRY}/proxy}
+  if [ -n "$DOCKER_REGISTRY_USER" ]; then
+    echo "no docker registry credentials; skipping push (use \`docker buildx bake local\`)"
+    exit 0
+  fi
 fi
+
+if [ -n "$DOCKER_REGISTRY" \
+   -a -n "$DOCKER_REGISTRY_USER" \
+   -a -n "$DOCKER_REGISTRY_PASS" ]; then
+  export DOCKER_REGISTRY DOCKER_REGISTRY_USER DOCKER_REGISTRY_PASS
+  printenv DOCKER_REGISTRY_PASS \
+    | docker login \
+        -u ${DOCKER_REGISTRY_USER?Need a DOCKER_REGISTRY_USER} \
+        --password-stdin \
+        ${DOCKER_REGISTRY?Need a DOCKER_REGISTRY}
+fi
+
+export DOCKER_REPOSITORY=${DOCKER_REPOSITORY:-${DOCKER_REGISTRY}/proxy}
 
 echo "building images with buildx bake, using $DOCKER_REPOSITORY"
 docker buildx bake -f docker-bake.hcl || exit $?
 
 echo "stack deploy $STACK_NAME, using $DOCKER_REPOSITORY"
 docker stack deploy \
-    -c $WORKSPACE/proxy.yml \
-    --with-registry-auth \
-    --detach=false \
-    $STACK_NAME
+  -c $WORKSPACE/proxy.yml \
+  --with-registry-auth \
+  --detach=false \
+  $STACK_NAME

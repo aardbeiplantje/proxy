@@ -10,7 +10,7 @@ Multi-architecture Squid-based HTTP proxy with Docker Swarm, deployable on amd64
 |-------------------|---------|
 | `Dockerfile`     | Alpine image installing squid, nginx, bash, cgroup-tools, iproute2-tc. Entry point: `/proxy.sh`. |
 | `docker-bake.hcl`| bake target producing tagged images per platform with registry cache-back and provenance/SBOM attestation. |
-| `deploy.sh`      | One-shot build-and-deploy script. Sets up a persistent multi-architecture buildx builder, pushes to registry, runs `docker stack deploy`. |
+| `deploy.sh`      | Pushes images and does Swarm stack deploy (requires `$DOCKER_REGISTRY_*`). For local-only builds use `docker buildx bake local` directly. |
 | `proxy.yml`      | Swarm compose file: encrypted iptables-enabled overlay network (`dmz-${APP_NAME}` on 10.99.5.x/24), single `proxy` service. |
 | `squid.conf`     | Base proxy config with acl-based slowing list, dynamic gateway IP injection via `[OUT]` token in `proxy.sh`. |
 | `proxy.sh`       | Entrypoint: runs `speed.sh`, injects default GW address into squid.conf, then execs squid foreground. |

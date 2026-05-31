@@ -3,6 +3,10 @@ group "default" {
     "runtime",
   ]
 }
+group "local" {
+  targets = ["local-amd64-proxy", "local-arm64-proxy"]
+}
+
 group "runtime" {
     targets = [
         "builds-proxy-amd64",
@@ -14,6 +18,24 @@ variable "DOCKER_TAG" {
 variable "DOCKER_REPOSITORY" {
   default = "local/proxy"
 }
+target "local" {
+  inherits = ["builds"]
+ matrix = {
+    i = [{ tgt = "proxy", img = "proxy" }],
+    p = [
+      { platform = "linux/amd64", suffix = "amd64" },
+      { platform = "linux/arm64", suffix = "arm64" },
+    ],
+  }
+
+  target     = "${i.tgt}"
+  name       = "local-${p.suffix}-${i.img}"
+  output     = ["type=image,load=true"]
+  cache-to   = ["/tmp/build-cache/${i.img}", "mode=min,if-exists=false"]
+  cache-from = []
+  attest     = []
+}
+
 target "builds" {
   pull = true
   progress = ["plain", "tty"]
@@ -39,7 +61,7 @@ target "builds" {
     ],
   }
   target = "${i.tgt}"
-  name = "builds-${i.img}-${p.suffix}"
+  name   = "builds-${i.img}-${p.suffix}"
   output = [
     "type=image,name=${DOCKER_REPOSITORY}/${i.img}:${DOCKER_TAG},push=true",
   ]
