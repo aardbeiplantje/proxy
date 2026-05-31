@@ -4,9 +4,8 @@ group "default" {
   ]
 }
 group "local" {
-  targets = ["local-amd64-proxy", "local-arm64-proxy"]
+  targets = ["_local"]
 }
-
 group "runtime" {
     targets = [
         "builds-proxy-amd64",
@@ -16,24 +15,29 @@ variable "DOCKER_TAG" {
   default = "latest"
 }
 variable "DOCKER_REPOSITORY" {
-  default = "local/proxy"
+  default = "local"
 }
-target "local" {
-  inherits = ["builds"]
- matrix = {
-    i = [{ tgt = "proxy", img = "proxy" }],
-    p = [
-      { platform = "linux/amd64", suffix = "amd64" },
-      { platform = "linux/arm64", suffix = "arm64" },
-    ],
-  }
+variable "DOCKER_IMAGE_NAME" {
+  default = "proxy"
+}
 
-  target     = "${i.tgt}"
-  name       = "local-${p.suffix}-${i.img}"
-  output     = ["type=image,load=true"]
-  cache-to   = ["/tmp/build-cache/${i.img}", "mode=min,if-exists=false"]
-  cache-from = []
-  attest     = []
+target "_common" {
+  context = "."
+  dockerfile = "Dockerfile"
+  platforms = ["linux/amd64"]
+  networks = ["host"]
+  buildkit = true
+}
+
+target "_local" {
+  inherits = ["_common"]
+  target = "proxy"
+  tags = [
+    "${DOCKER_IMAGE_NAME}:latest",
+  ]
+  output = [
+    "type=docker,name=${DOCKER_IMAGE_NAME}:${DOCKER_TAG}"
+  ]
 }
 
 target "builds" {

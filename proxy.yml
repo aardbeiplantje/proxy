@@ -22,7 +22,7 @@ x-deploy: &deploy
 services:
   proxy:
     <<: *deploy
-    image: ${DOCKER_REPOSITORY}/proxy:latest
+    image: ${DOCKER_IMAGE}
     hostname: "proxy"
     init: true
     networks:
