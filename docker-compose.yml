@@ -2,22 +2,34 @@ services:
   proxy:
     image: ${DOCKER_IMAGE:-local/network/proxy:latest}
     container_name: proxy-ingress-local-${LOGNAME}
-    restart: always
     init: true
+    restart: always
+    tmpfs:
+      - /tmp:size=1M
+      - /var/tmp:size=1M
+      - /run:size=1M
+      - /var/empty:size=1M
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETUID
+      - SETGID
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 128m
+    memswap_limit: 128m
+    pids_limit: 100
+    ulimits:
+      nofile:
+        soft: 1024
+        hard: 1024
     networks:
       - dmz-ipv6
       - dmz-ipv4
     volumes:
       - proxy-logs:/var/log/squid
-    cap_add:
-      - ALL
-      - NET_ADMIN
-    cap_drop:
-      - SYS_ADMIN
     ports:
-      - target: 8080
-        published: 8080
-        protocol: tcp
+      - "0.0.0.0:8080:8080"
     environment:
       SQUID_DAEMON_OPTS: ""
       TC_HTB_RATE: ${TC_HTB_RATE:-100Mbit}
@@ -27,18 +39,16 @@ networks:
     name: dmz-${APP_NAME:-proxy}-ipv6
     driver: bridge
     enable_ipv6: true
-    internal: true
     driver_opts:
       com.docker.network.bridge.gateway_mode_ipv6: "routed"
     ipam:
       driver: default
       config:
-        - subnet: ${IPV6_SUBNET?Need IPV6_SUBNET}
-          gateway: ${IPV6_GATEWAY?Need IPV6_GATEWAY}
+        - subnet: "${IPV6_SUBNET}"
+          gateway: "${IPV6_GATEWAY}"
   dmz-ipv4:
     name: dmz-${APP_NAME:-proxy}-ipv4
     driver: bridge
-    internal: true
     driver_opts:
       com.docker.network.bridge.gateway_mode_ipv4: "nat"
       com.docker.network.bridge.enable_ip_masquerade: "true"
