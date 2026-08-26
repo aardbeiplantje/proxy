@@ -5,8 +5,9 @@ export APP_NAME=${APP_NAME:-proxy}
 export STACK_NAME=${STACK_NAME:-proxy}
 export TC_HTB_RATE=${TC_HTB_RATE:-50Mbit}
 export DOCKER_IMAGE=${DOCKER_IMAGE:-local/network/proxy:latest}
-export IPV6_SUBNET=${IPV6_SUBNET?Need IPV6_SUBNET (e.g. 2001:db8::c::2/120)}
-export IPV6_GATEWAY=${IPV6_GATEWAY?Need IPV6_GATEWAY (e.g. 2001:db8::c::1)}
+export IPV6_SUBNET=${IPV6_SUBNET?Need IPV6_SUBNET (e.g. 2001:db8:c::/120)}
+export IPV6_GATEWAY=${IPV6_GATEWAY?Need IPV6_GATEWAY (e.g. 2001:db8:c::1)}
+export IPV6_ADDRESS=${IPV6_ADDRESS?Need IPV6_ADDRESS (e.g. 2001:db8:c::2)}
 
 cd $WORKSPACE || exit $?
 
