@@ -5,9 +5,9 @@ Multi-architecture Squid HTTP proxy deployed via Docker Compose on a single host
 ## Quick Start
 
 ```bash
-IPV6_SUBNET=2a02:a03f:8789:e700:c::/120 IPV6_GATEWAY=2a02:a03f:8789:e700:c::1 ./deploy.sh                          # deploy locally
-IPV6_SUBNET=... IPV6_GATEWAY=... export TC_HTB_RATE=200Mbit && ./deploy.sh   # custom rate limit
-IPV6_SUBNET=... IPV6_GATEWAY=... APP_NAME=my-proxy ./deploy.sh # custom name
+IPV6_SUBNET=2001:db8:c::1:0/120 IPV6_GATEWAY=2001:db8:c::1:1 IPV6_ADDRESS=2001:db8:c::1:2 ./deploy.sh                    # deploy locally
+IPV6_SUBNET=... IPV6_GATEWAY=... IPV6_ADDRESS=... export TC_HTB_RATE=200Mbit && ./deploy.sh   # custom rate limit
+IPV6_SUBNET=... IPV6_GATEWAY=... IPV6_ADDRESS=... APP_NAME=my-proxy ./deploy.sh # custom name
 ```
 
 **Prerequisites:** docker and `docker compose` plugin on target host. Build happens at deploy time; no pre-built images.
@@ -45,8 +45,9 @@ Proxy is transparent — no caching, used as forwarding proxy only.
 | `APP_NAME` | `proxy` | Network and volume name prefix |
 | `TC_HTB_RATE` | `50Mbit` | Network rate cap per node |
 | `DOCKER_IMAGE` | `local/network/proxy:latest` | Image name and tag |
-| `IPV6_SUBNET` | — *(required)* | IPv6 subnet (e.g. `2a02:a03f:8789:e700:c::/120`) |
-| `IPV6_GATEWAY` | — *(required)* | IPv6 gateway IP (e.g. `2a02:a03f:8789:e700:c::1`) |
+| `IPV6_SUBNET` | — *(required)* | IPv6 subnet (e.g. `2001:db8:c::1:0/120`) |
+| `IPV6_GATEWAY` | — *(required)* | IPv6 gateway IP (e.g. `2001:db8:c::1:1`) |
+| `IPV6_ADDRESS` | — *(required)* | IPv6 address for the proxy container (e.g. `2001:db8:c::1:2`) |
 
 ### Environment Variables (proxy.sh / speed.sh)
 
