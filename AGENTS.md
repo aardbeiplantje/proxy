@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Multi-architecture Squid-based HTTP proxy with Docker Swarm, deployable on amd64/arm64/aarch64 nodes labeled `proxy=1`. Bandwidth throttled via Linux `tc` (HTB qdisc) using netfilter marks. Only the `proxy.sh` entrypoint script runs; everything else is config/data.
+Multi-architecture Squid-based HTTP proxy with Docker Compose, deployable on amd64/arm64/aarch64 hosts. Bandwidth throttled via Linux `tc` (HTB qdisc) using netfilter marks. Dual-stack networking (IPv4 + IPv6). Only the `proxy.sh` entrypoint script runs; everything else is config/data.
 
 ## Repository Layout
 
@@ -10,8 +10,8 @@ Multi-architecture Squid-based HTTP proxy with Docker Swarm, deployable on amd64
 |-------------------|---------|
 | `Dockerfile`     | Alpine image installing squid, nginx, bash, cgroup-tools, iproute2-tc. Entry point: `/proxy.sh`. |
 | `docker-bake.hcl`| bake target producing tagged images per platform with registry cache-back and provenance/SBOM attestation. |
-| `deploy.sh`      | Pushes images and does Swarm stack deploy (requires `$DOCKER_REGISTRY_*`). For local-only builds use `docker buildx bake local` directly. |
-| `proxy.yml`      | Swarm compose file: encrypted iptables-enabled overlay network (`dmz-${APP_NAME}` on 10.99.5.x/24), single `proxy` service. |
+| `deploy.sh`      | Builds images with buildx bake and runs `docker compose up -d`. |
+| `docker-compose.yml` | Compose file: dual-stack bridge networks (`dmz-ipv4` on 10.99.5.x/24, `dmz-ipv6` with configurable subnet), single `proxy` service. |
 | `squid.conf`     | Base proxy config with acl-based slowing list, dynamic gateway IP injection via `[OUT]` token in `proxy.sh`. |
 | `proxy.sh`       | Entrypoint: runs `speed.sh`, injects default GW address into squid.conf, then execs squid foreground. |
 | `speed.sh`       | Configures tc root qdisc with HTB classes; attached to same interface(s) as proxy. |
@@ -19,12 +19,12 @@ Multi-architecture Squid-based HTTP proxy with Docker Swarm, deployable on amd64
 ## Build & Deploy (human-in-the-loop preferred)
 
 ```bash
-./deploy.sh                        # uses defaults; needs DOCKER_REGISTRY_* or falls back to local
-export TC_HTB_RATE=200Mbit && ./deploy.sh   # override bandwidth cap per host
-APP_NAME=my-proxy STACK_NAME=sp ./deploy.sh  # custom names (default: APP_NAME=proxy, STACK_NAME=$APP_NAME)
+IPV6_SUBNET=2a02:a03f:8789:e700:c::/120 IPV6_GATEWAY=2a02:a03f:8789:e700:c::1 ./deploy.sh
+export TC_HTB_RATE=200Mbit && ./deploy.sh   # override bandwidth cap
+APP_NAME=my-proxy ./deploy.sh  # custom name (default: APP_NAME=proxy)
 ```
 
-**Preconditions on target node:** `docker` binary available and in path. Target swarm workers must carry label `node.labels.proxy==1`. Build happens at deploy time; no pre-built artifacts.
+**Preconditions on target host:** `docker` binary and `docker compose` plugin in path. Build happens at deploy time; no pre-built artifacts.
 
 ## Squid & TC Mechanics
 
@@ -35,4 +35,4 @@ APP_NAME=my-proxy STACK_NAME=sp ./deploy.sh  # custom names (default: APP_NAME=p
 
 - Scripts use strict mode implicitly via the deploy file (never sources or forks without explicit error handling; exit on failure).
 - Registry credentials come from environment at runtime only — never committed. Buildx builder name defaults to `builder`; recreate it if you hit stale state.
-- Network subnet is `/24` by default (`proxy.yml`). Recent commits include IPv6 work, though the active branch doesn't expose a `v6` label yet.
+- Network subnet is `/24` by default for IPv4 (`docker-compose.yml`). IPv6 subnet and gateway are required environment variables (`IPV6_SUBNET`, `IPV6_GATEWAY`) and will fail if not provided.
