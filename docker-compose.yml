@@ -17,6 +17,7 @@ services:
       - NET_ADMIN
     security_opt:
       - no-new-privileges:true
+    shm_size: 128m
     mem_limit: 128m
     memswap_limit: 128m
     pids_limit: 100

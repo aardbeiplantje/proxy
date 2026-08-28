@@ -7,11 +7,11 @@ SQUID_IFNAME="$DETECTED_IFS" sh /speed.sh "${TC_HTB_RATE:-10Mbit}"
 gw_ip=$(ip r|awk '/default via / {print $3}')
 echo "default gw: $gw_ip"
 sed -i "s/\[OUT\]/$gw_ip/g" $cfg_file
-sudo -u squid bash -c "
- squid -f $cfg_file -k parse     || exit \$?
- squid -z -N -F -S -f $cfg_file  || exit \$?
-"
+echo "checking config 1"
+squid -f $cfg_file -k parse     || exit $?
+echo "checking config 2"
+squid -z -N -F -S -f $cfg_file  || exit $?
 echo "capabilities: "
 getcap /usr/sbin/squid
-echo "starting squid"
+echo "starting squid as "$(id)
 exec /usr/sbin/squid --foreground -f $cfg_file $daemon_opts
