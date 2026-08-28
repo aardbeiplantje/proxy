@@ -2,10 +2,12 @@
 FROM alpine AS proxy
 
 RUN apk add --no-cache \
-        squid nginx bash sudo cgroup-tools iproute2-tc
+        squid nginx bash sudo cgroup-tools iproute2-tc libcap
 
 ARG CACHEBUST=1
 RUN apk update && apk upgrade
+
+RUN setcap cap_net_admin+ep /usr/sbin/squid
 
 RUN mkdir -p /etc/squid/proxy.conf.d/ && touch /etc/squid/proxy.conf.d/00-empty
 COPY --chmod=0555 --chown=root proxy.sh /
