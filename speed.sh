@@ -27,9 +27,9 @@ for i in $ifs; do
     # Add the 'fw' (Firewall Mark) Filter
     # It checks the Netfilter Mark (fwmark) on the packet.
     # It matches packets with $MARK_HEX
-    tc filter add dev $ifname parent 10:0 protocol ip   prio 1 \
+    tc filter add dev $ifname parent 10: protocol ip   prio 1 \
         handle $MARK_HEX fw flowid 10:2
-    tc filter add dev $ifname parent 10:0 protocol ipv6 prio 2 \
+    tc filter add dev $ifname parent 10: protocol ipv6 prio 2 \
         handle $MARK_HEX fw flowid 10:2
 
     # Add an explicit class for default fallback traffic:
