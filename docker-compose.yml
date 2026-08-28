@@ -15,6 +15,7 @@ services:
       - SETUID
       - SETGID
       - NET_ADMIN
+      - NET_RAW
     security_opt:
       - no-new-privileges:true
     shm_size: 128m
