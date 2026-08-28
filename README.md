@@ -27,11 +27,22 @@ IPV6_SUBNET=... IPV6_GATEWAY=... IPV6_ADDRESS=... APP_NAME=my-proxy ./deploy.sh 
 - **docker-compose.yml** — dual-stack compose: bridge networks (dmz-ipv4 + dmz-ipv6), single service.
 - **squid.conf** — acl-based proxy rules, slow list throttling via squid's `mark_client_packet`, cache disabled.
 - **proxy.sh** — entrypoint; runs `speed.sh`, injects default GW address into `squid.conf`.
-- **speed.sh** — creates HTB qdisc (rate class 10:2 marked with fwmark 0x12321).
+- **speed.sh** — creates HTB qdisc with three classes: throttled (10:2, marked), fast lane (10:30), and parent (10:1).
 
 ### Squid ↔ tc Flow
 
 Squid marks packets destined for the slowdown list (`slowdownlist` acl) with netfilter mark `fwmark=0x12321`. `speed.sh` configures a tc filter to route that same mark into HTB class 10:2, where SFQ pacing enforces the rate limit.
+
+### HTB Class Hierarchy
+
+```
+10: root (htb, rate 200Mbit ceil 200Mbit)
+ ├── 10:2  (htb, rate=$TC_HTB_RATE ceil=$TC_HTB_RATE)  ← marked packets (slowdownlist)
+ │   └── 2: sfq
+ └── 10:30 (htb, rate 200Mbit ceil 200Mbit)            ← unmarked traffic (fast lane)
+```
+
+Unmarked traffic flows at full speed (up to 200Mbit). Marked traffic is rate-limited but can burst within its allocated ceiling. The parent ceiling (200Mbit) exceeds individual class rates so unmarked traffic can use spare bandwidth. `r2q=10` and `quantum=1500` reduce scheduling overhead for large transfers.
 
 Proxy is transparent — no caching, used as forwarding proxy only.
 
