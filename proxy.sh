@@ -1,7 +1,7 @@
 #!/bin/sh
 cfg_file=${SQUID_CONFIG_FILE:-/etc/squid/squid.conf}
 daemon_opts=${SQUID_DAEMON_OPTS:-}
-sh /speed.sh "${TC_HTB_RATE:-10Mbit}"
+SQUID_IFNAME="dmz0 dmz1" sh /speed.sh "${TC_HTB_RATE:-10Mbit}"
 gw_ip=$(ip r|awk '/default via / {print $3}')
 echo "default gw: $gw_ip"
 sed -i "s/\[OUT\]/$gw_ip/g" $cfg_file

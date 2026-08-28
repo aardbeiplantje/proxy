@@ -14,6 +14,7 @@ services:
     cap_add:
       - SETUID
       - SETGID
+      - NET_ADMIN
     security_opt:
       - no-new-privileges:true
     mem_limit: 128m
