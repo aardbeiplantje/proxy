@@ -1,5 +1,5 @@
 #!/bin/sh
-ifs=${SQUID_IFNAME:-eth0 eth1}
+ifs=${SQUID_IFNAME:-dmz0 dmz1}
 rate_speed=${1:-10Mbit}
 MARK_HEX=0x12321 # The mark set by Squid
 
