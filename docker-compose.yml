@@ -67,3 +67,4 @@ networks:
 volumes:
   proxy-logs:
     name: "logs-${APP_NAME:-proxy}"
+    external: true
